@@ -1,11 +1,13 @@
-#include <XboxSeriesXControllerESP32_asukiaaa.hpp>
 #include <string.h>
 #include <algorithm> 
 #include <iostream>
 #include <ESP32Servo.h>
 #include <SoftwareSerial.h>
+#include <PCF8574.h>
 
-using namespace std; 
+using namespace std;
+
+PCF8574 Encoder(0x24);
 
 SoftwareSerial mySerial(32,13);
 
@@ -15,16 +17,8 @@ unsigned long currentMillis;
 unsigned long servodelaystart;
 unsigned long servodelaycurrent;
 
-
 Servo servo1;
 Servo servo2;
-
-const int motor1encodeA = 4;
-const int motor1encodeB = 16;
-const int motor2encodeA = 17;
-const int motor2encodeB = 5;
-const int motor3encodeA = 18;
-const int motor3encodeB = 19;
 
 const int motor1a = 14;
 const int motor1b = 12;
@@ -33,21 +27,31 @@ const int motor2b = 27;
 const int motor3a = 33;
 const int motor3b = 25;
 
-void Drive_Motor(int motorA,int motorB,int motorvalue){
+const int PWM1 = 5;
+const int PWM2 = 18;
+const int PWM3 = 19;
+
+const int Hallsensor1 = 4;
+const int Hallsensor2 = 16;
+const int Hallsensor3 = 17;
+
+void Drive_Motor(int motorA,int motorB,int motorPWM,int motorvalue){
   if(motorvalue < -255){motorvalue = -255;}
   if(motorvalue > 255){motorvalue = 255;}
   if(motorvalue > 0){
-    analogWrite(motorA,abs(motorvalue));
-    analogWrite(motorB,0);
+    digitalWrite(motorA,HIGH);
+    digitalWrite(motorB,LOW);
+    analogWrite(motorPWM,abs(motorvalue));
   }else if(motorvalue < 0){
-    analogWrite(motorA,0);
-    analogWrite(motorB,abs(motorvalue));
+    digitalWrite(motorA,LOW);
+    digitalWrite(motorB,HIGH);
+    analogWrite(motorPWM,abs(motorvalue));
   }else{
-    analogWrite(motorA,0);
-    analogWrite(motorB,0);
+    digitalWrite(motorA,HIGH);
+    digitalWrite(motorB,HIGH);
+    analogWrite(motorPWM,0);
   }
 }
-
 
 void setup(){
     Serial.begin(115200);
@@ -56,15 +60,16 @@ void setup(){
     startMillis = millis();
     servodelaystart = millis();
 
-    servo1.attach(22);
+    servo1.attach(15);
     servo2.attach(23);
 
-    pinMode(motor1encodeA,INPUT_PULLDOWN);
-    pinMode(motor1encodeB,INPUT_PULLDOWN);
-    pinMode(motor2encodeA,INPUT_PULLDOWN);
-    pinMode(motor2encodeB,INPUT_PULLDOWN);
-    pinMode(motor3encodeA,INPUT_PULLDOWN);
-    pinMode(motor3encodeB,INPUT_PULLDOWN);
+    Encoder.pinMode(P0,INPUT_PULLDOWN);
+    Encoder.pinMode(P1,INPUT_PULLDOWN);
+    Encoder.pinMode(P2,INPUT_PULLDOWN);
+    Encoder.pinMode(P3,INPUT_PULLDOWN);
+    Encoder.pinMode(P4,INPUT_PULLDOWN);
+    Encoder.pinMode(P5,INPUT_PULLDOWN);
+    // Encoder.digitalRead(P0);
 
     pinMode(motor1a,OUTPUT);
     pinMode(motor1b,OUTPUT);
@@ -73,7 +78,13 @@ void setup(){
     pinMode(motor3a,OUTPUT);
     pinMode(motor3b,OUTPUT);
 
+    pinMode(PWM1,OUTPUT);
+    pinMode(PWM2,OUTPUT);
+    pinMode(PWM3,OUTPUT);
 
+    pinMode(Hallsensor1,OUTPUT);
+    pinMode(Hallsensor2,OUTPUT);
+    pinMode(Hallsensor3,OUTPUT);
 }
 
 bool controllers_Lock = 1;
@@ -93,11 +104,9 @@ int controllerBtnY;
 
 int scancount;
 
-double ArmMultiplier = 0.6;
+double ArmMultiplier = 0.5;
 
 int servopos = 0;
-int servodelayconst = 15;
-int servo1delay;
 
 int servo2index = 0;
 String servo2state[] = {"Open","Close"};
@@ -188,10 +197,10 @@ void loop(){
 
       /// Jacobian here SOON
 
-        Drive_Motor(motor1a,motor1b,controllerRH*ArmMultiplier);
-        Drive_Motor(motor2a,motor2b,controllerRV*ArmMultiplier);
-        Drive_Motor(motor3a,motor3b,controllerLV*ArmMultiplier);
-        delay(2);
+      Drive_Motor(motor1a,motor1b,PWM1,controllerRH*ArmMultiplier);
+      Drive_Motor(motor2a,motor2b,PWM2,controllerRV*ArmMultiplier);
+      Drive_Motor(motor3a,motor3b,PWM3,controllerLV*ArmMultiplier);
+      delay(2);
 
       Serial.print("motor 1 = ");
       Serial.print(controllerRH);
@@ -212,7 +221,7 @@ void loop(){
           servopos -= 1;
       }
       }
-        
+
       //button A  for griper
       if(controllerBtnA && (currentMillis - startMillis > 500)){
         startMillis = currentMillis;
@@ -225,15 +234,12 @@ void loop(){
         }
       }
 
-
       Serial.print("servopos = ");
       Serial.println(servopos);
 
       Serial.print("griper = ");
       Serial.println(servo2state[servo2index%2]);
     }
-
-
 
   }else if((controllers_Lock == 0) && (Reaching_mode == 0)){
     //moving mode
