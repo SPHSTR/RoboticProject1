@@ -2,13 +2,7 @@
 #include <math.h>
 #include <string>
 #include <SoftwareSerial.h>
-
-
-// Required to replace with your xbox address
-// XboxSeriesXControllerESP32_asukiaaa::Core
-// xboxController("44:16:22:5e:b2:d4");
-
-// any xbox controller("28:ea:0b:d0:38:a4")
+#include <PCF8574.h>
 
 //encode1
 const int motor1encodeA = 4;
@@ -29,16 +23,14 @@ const int motor2b =26;
 const int motor3a =25;
 const int motor3b =33;
 //indicator LED
-const int RLED1 = 23;
-const int RLED2 = 22;
-const int GLED1 = 32;
-const int GLED2 = 32;
-const int BLED1 = 2;
-const int BLED2 = 15;
-const int YLED1 = 21;
-const int YLED2 = 0;
+const int RLED = 23;
+const int GLED = 15;
+const int BLED = 2;
+const int YLED = 0;
 
 XboxSeriesXControllerESP32_asukiaaa::Core xboxController("28:ea:0b:d0:38:a4");
+
+PCF8574 Ultrasonic(0x27);
 
 SoftwareSerial mySerial(32,13);
 
@@ -51,6 +43,10 @@ unsigned long ESPcurrentMillis;
 unsigned long Tdelaystart;
 unsigned long Tdelaycurrent;
 
+unsigned long USStartMillis;
+unsigned long USCurrentMillis;
+
+
 void setup() {
   Serial.begin(115200);
   Serial.println("Starting NimBLE Client");
@@ -59,16 +55,14 @@ void setup() {
   startMillis = millis();
   ESPstartMillis = millis();
   Tdelaystart = millis();
+  USStartMillis = millis();
 
+  Ultrasonic.begin();
 
-  pinMode(RLED1,OUTPUT);
-  pinMode(RLED2,OUTPUT);
-  pinMode(GLED1,OUTPUT);
-  pinMode(GLED2,OUTPUT);
-  pinMode(YLED1,OUTPUT);
-  pinMode(YLED2,OUTPUT);
-  pinMode(BLED1,OUTPUT);
-  pinMode(BLED2,OUTPUT);
+  pinMode(RLED,OUTPUT);
+  pinMode(GLED,OUTPUT);
+  pinMode(YLED,OUTPUT);
+  pinMode(BLED,OUTPUT);
 
   pinMode(motor1a,OUTPUT);
   pinMode(motor1b,OUTPUT);
@@ -83,6 +77,12 @@ void setup() {
   pinMode(motor2encodeB,INPUT_PULLDOWN);
   pinMode(motor3encodeA,INPUT_PULLDOWN);
   pinMode(motor3encodeB,INPUT_PULLDOWN);
+
+  Ultrasonic.pinMode(P0,OUTPUT);
+  Ultrasonic.pinMode(P1,INPUT);
+  Ultrasonic.pinMode(P2,INPUT_PULLDOWN);
+  Ultrasonic.pinMode(P3,INPUT_PULLDOWN);
+  // Encoder.digitalWrite(P0,HIGH);
 
   mySerial.begin(115200);
 }
@@ -116,7 +116,9 @@ void Drive_Motor(int motorA,int motorB,int motorvalue){
   }
 }
 
+void Range_Finder(){
 
+}
 
 int start = 0;
 bool Controller_Lock = 1;
@@ -200,23 +202,15 @@ void loop() {
             };
 
           if((Moiving_Mode_index%2)==0){
-              digitalWrite(RLED1,LOW);
-              digitalWrite(RLED2,LOW);
-              digitalWrite(GLED1,LOW);
-              digitalWrite(GLED2,LOW);
-              digitalWrite(BLED1,HIGH);
-              digitalWrite(BLED2,HIGH);
-              digitalWrite(YLED1,LOW);
-              digitalWrite(YLED2,LOW);
+              digitalWrite(RLED,LOW);
+              digitalWrite(GLED,LOW);
+              digitalWrite(BLED,HIGH);
+              digitalWrite(YLED,LOW);
           }else if((Moiving_Mode_index%2)==1){
-              digitalWrite(RLED1,HIGH);
-              digitalWrite(RLED2,HIGH);
-              digitalWrite(GLED1,LOW);
-              digitalWrite(GLED2,LOW);
-              digitalWrite(BLED1,HIGH);
-              digitalWrite(BLED2,HIGH);
-              digitalWrite(YLED1,LOW);
-              digitalWrite(YLED2,LOW);
+              digitalWrite(RLED,HIGH);
+              digitalWrite(GLED,LOW);
+              digitalWrite(BLED,HIGH);
+              digitalWrite(YLED,LOW);
             }
 
           String str = "";
@@ -225,6 +219,8 @@ void loop() {
           }
           str.trim();
           // Serial.println(str);
+
+
           //wait for ultrasonic init
 
 //moving code here
@@ -281,23 +277,15 @@ void loop() {
             };
 
           if((Reaching_Mode_index%2)==0){
-              digitalWrite(RLED1,LOW);
-              digitalWrite(RLED2,LOW);
-              digitalWrite(GLED1,LOW);
-              digitalWrite(GLED2,LOW);
-              digitalWrite(BLED1,LOW);
-              digitalWrite(BLED2,LOW);
-              digitalWrite(YLED1,HIGH);
-              digitalWrite(YLED2,HIGH);
+              digitalWrite(RLED,LOW);
+              digitalWrite(GLED,LOW);
+              digitalWrite(BLED,LOW);
+              digitalWrite(YLED,HIGH);
             }else if ((Reaching_Mode_index%2)==1){
-              digitalWrite(RLED1,HIGH);
-              digitalWrite(RLED2,HIGH);
-              digitalWrite(GLED1,LOW);
-              digitalWrite(GLED2,LOW);
-              digitalWrite(BLED1,LOW);
-              digitalWrite(BLED2,LOW);
-              digitalWrite(YLED1,HIGH);
-              digitalWrite(YLED2,HIGH);
+              digitalWrite(RLED,HIGH);
+              digitalWrite(GLED,LOW);
+              digitalWrite(BLED,LOW);
+              digitalWrite(YLED,HIGH);
             }
 
 //Arm code
@@ -389,38 +377,26 @@ void loop() {
           Serial.println("Controller UnLock");
           Vibration(0,0,1,1,100,100);
         }
-        digitalWrite(RLED1,LOW);
-        digitalWrite(RLED2,LOW);
-        digitalWrite(GLED1,HIGH);
-        digitalWrite(GLED2,HIGH);
-        digitalWrite(BLED1,LOW);
-        digitalWrite(BLED2,LOW);
-        digitalWrite(YLED1,LOW);
-        digitalWrite(YLED2,LOW);
+        digitalWrite(RLED,LOW);
+        digitalWrite(GLED,HIGH);
+        digitalWrite(BLED,LOW);
+        digitalWrite(YLED,LOW);
       }
     }
   }else{
 
     if(currentMillis - startMillis >= 350){
       startMillis = currentMillis;
-      if(digitalRead(RLED1) == LOW){
-        digitalWrite(RLED1,HIGH);
-        digitalWrite(RLED2,LOW);
-        digitalWrite(BLED1,HIGH);
-        digitalWrite(BLED2,LOW);
-        digitalWrite(GLED1,LOW);
-        digitalWrite(GLED2,HIGH);
-        digitalWrite(YLED1,LOW);
-        digitalWrite(YLED2,HIGH);
+      if(digitalRead(RLED) == LOW){
+        digitalWrite(RLED,HIGH);
+        digitalWrite(BLED,HIGH);
+        digitalWrite(GLED,LOW);
+        digitalWrite(YLED,LOW);
       }else{
-        digitalWrite(RLED1,LOW);
-        digitalWrite(RLED2,HIGH);
-        digitalWrite(BLED1,LOW);
-        digitalWrite(BLED2,HIGH);
-        digitalWrite(GLED1,HIGH);
-        digitalWrite(GLED2,LOW);
-        digitalWrite(YLED1,HIGH);
-        digitalWrite(YLED2,LOW);
+        digitalWrite(RLED,LOW);
+        digitalWrite(BLED,LOW);
+        digitalWrite(GLED,HIGH);
+        digitalWrite(YLED,HIGH);
       }
     }
     // Serial.println("not connected");
@@ -428,24 +404,6 @@ void loop() {
       ESPstartMillis = ESPcurrentMillis;
       ESP.restart();
 
-      // //testๆ
-      // Serial.print(8);
-      // Serial.print(" ");
-      // //LV
-      // Serial.print(9);
-      // Serial.print(" ");
-      // //RH
-      // Serial.print(10);
-      // Serial.print(" ");
-      // //RV
-      // Serial.print(11);
-      // Serial.print(" ");
-      // //TrigL
-      // Serial.print(12);
-      // Serial.print(" ");
-      // //TrigR
-      // Serial.print(13);
-      // Serial.println(" ");
     }
   }
 }
