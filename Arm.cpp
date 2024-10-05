@@ -82,9 +82,9 @@ void setup(){
     pinMode(PWM2,OUTPUT);
     pinMode(PWM3,OUTPUT);
 
-    pinMode(Hallsensor1,OUTPUT);
-    pinMode(Hallsensor2,OUTPUT);
-    pinMode(Hallsensor3,OUTPUT);
+    pinMode(Hallsensor1,INPUT_PULLDOWN);
+    pinMode(Hallsensor2,INPUT_PULLDOWN);
+    pinMode(Hallsensor3,INPUT_PULLDOWN);
 }
 
 bool controllers_Lock = 1;
@@ -104,12 +104,13 @@ int controllerBtnY;
 
 int scancount;
 
-double ArmMultiplier = 0.5;
 
 int servopos = 0;
 
 int servo2index = 0;
 String servo2state[] = {"Open","Close"};
+double ArmMultiplier;
+int servodelay;
 
 void loop(){
   currentMillis = millis();
@@ -142,6 +143,7 @@ void loop(){
 
   if( (str == "Mode Reaching") || (str == "Reaching Mode mode1") || (str == "Reaching Mode mode2")){
     Reaching_mode = 1;
+    controllers_Lock = 0;
   }else if( (str == "Mode Moving") || (str == "Moving Mode Walk") || (str == "Moving Mode Rush")){
     Reaching_mode = 0;
   }
@@ -158,7 +160,7 @@ void loop(){
   // Serial.print(Reaching_mode);
   // Serial.print("mode ");
   // Serial.println(Mode);
-  // delay(500);  
+    
 
 
   if((controllers_Lock == 0) && (Reaching_mode == 1)){
@@ -193,53 +195,66 @@ void loop(){
 
 
     if(Mode == 0){
+      ArmMultiplier = 0.3;
+      servodelay = 20;
+      }
+    if(Mode == 1){
+      ArmMultiplier = 0.5;
+      servodelay = 5;
+      }
       // Serial.println("          mode 1");
 
       /// Jacobian here SOON
 
-      Drive_Motor(motor1a,motor1b,PWM1,controllerRH*ArmMultiplier);
-      Drive_Motor(motor2a,motor2b,PWM2,controllerRV*ArmMultiplier);
+
+      Drive_Motor(motor1a,motor1b,PWM1,(-1)*controllerRH*ArmMultiplier);
+      Drive_Motor(motor2a,motor2b,PWM2,(-1)*controllerRV*ArmMultiplier);
       Drive_Motor(motor3a,motor3b,PWM3,controllerLV*ArmMultiplier);
       delay(2);
 
       Serial.print("motor 1 = ");
-      Serial.print(controllerRH);
+      Serial.print((-1)*controllerRH*ArmMultiplier);
       Serial.print("  motor 2 = ");
-      Serial.print(controllerRV);
+      Serial.print((-1)*controllerRV*ArmMultiplier);
       Serial.print("  motor 3 = ");
-      Serial.println(controllerLV);
+      Serial.print(controllerLV*ArmMultiplier);
 
-    }if(Mode == 1){ //griper pitch   and  grap
-    // Serial.println("                  mode 2");
-      if(servodelaycurrent - servodelaystart > 5){
+      if(servodelaycurrent - servodelaystart > servodelay){
         servodelaystart = servodelaycurrent;
-        if(controllerTrigR && servopos < 180){
+        if(controllerTrigL && servopos < 180){
           servo1.write(servopos);
           servopos += 1;
-        }else if(controllerTrigL  && servopos > 0){
+        }else if(controllerTrigR  && servopos > 0){
           servo1.write(servopos);
           servopos -= 1;
       }
       }
 
+
+
       //button A  for griper
       if(controllerBtnA && (currentMillis - startMillis > 500)){
         startMillis = currentMillis;
         servo2index += 1;
+      
 
-        if(servo2index%2 == 0){
-          servo2.write(0);
-        }else if(servo2index%2 == 1){
-          servo2.write(180);
+      if(servo2index%2 == 0){
+        servo2.write(0);
+      }else if(servo2index%2 == 1){
+        servo2.write(180);
         }
-      }
+  }
+      Serial.print("  servopos = ");
+      Serial.print(servopos);
 
-      Serial.print("servopos = ");
-      Serial.println(servopos);
-
-      Serial.print("griper = ");
+      Serial.print(" griper =  ");
       Serial.println(servo2state[servo2index%2]);
-    }
+
+
+     //griper pitch   and  grap
+    // Serial.println("                  mode 2");
+      
+    
 
   }else if((controllers_Lock == 0) && (Reaching_mode == 0)){
     //moving mode
