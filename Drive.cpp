@@ -46,6 +46,9 @@ unsigned long Tdelaycurrent;
 unsigned long USStartMillis;
 unsigned long USCurrentMillis;
 
+unsigned long ConStartMillis;
+unsigned long ConCurrentMillis;
+
 
 void setup() {
   Serial.begin(115200);
@@ -56,6 +59,7 @@ void setup() {
   ESPstartMillis = millis();
   Tdelaystart = millis();
   USStartMillis = millis();
+  ConStartMillis = millis();
 
   Ultrasonic.begin();
 
@@ -111,8 +115,8 @@ void Drive_Motor(int motorA,int motorB,int motorvalue){
     analogWrite(motorA,0);
     analogWrite(motorB,abs(motorvalue));
   }else{
-    analogWrite(motorA,0);
-    analogWrite(motorB,0);
+    analogWrite(motorA,128);
+    analogWrite(motorB,128);
   }
 }
 
@@ -164,6 +168,7 @@ void loop() {
   currentMillis = millis();
   ESPcurrentMillis = millis();
   Tdelaycurrent = millis();
+  ConCurrentMillis = millis();
 
   xboxController.onLoop();
   if (xboxController.isConnected()) {
@@ -223,10 +228,10 @@ void loop() {
 
           //wait for ultrasonic init
 
-//moving code here
-          controllertheshold = 12;
-          rotationmultiply = 2;
 
+          controllertheshold = 10;
+          rotationmultiply = 2;
+//moving code here
           if(abs((-1)*(xboxController.xboxNotif.joyLVert/128)+256) > controllertheshold){
             controllerLV = (-1)*(xboxController.xboxNotif.joyLHori/128)+256 ;
           }else controllerLV = 0;
@@ -243,25 +248,21 @@ void loop() {
           //
           //ultrasonic cal above
 
-
           Motor1_value = (-controllerLV + (-controllerRH * 0.125 * 3)) * movingmodemultiply[Moiving_Mode_index%2];
           Motor2_value = ((controllerLV * sin(PI/6)) - (controllerLH * cos(PI/6)) + (-controllerRH * 0.125 * 3)) * movingmodemultiply[Moiving_Mode_index%2];
-          Motor3_value = ((controllerLV * sin(PI/6)) + (controllerLH * cos(PI/6)) + (-controllerRH * 0.125) * 3) * movingmodemultiply[Moiving_Mode_index%2];
+          Motor3_value = ((controllerLV * sin(PI/6)) + (controllerLH * cos(PI/6)) + (-controllerRH * 0.125 * 3)) * movingmodemultiply[Moiving_Mode_index%2];
 
-          if(xboxController.xboxNotif.joyRHori || xboxController.xboxNotif.joyLVert || xboxController.xboxNotif.joyLHori){
-          // if(xboxController.xboxNotif.joyRHori || xboxController.xboxNotif.joyLVert || xboxController.xboxNotif.joyLHori){
-            // Serial.print("Motor1_value = ");
-            // Serial.println(Motor1_value);
-            // Serial.print("Motor2_value = ");
-            // Serial.println(Motor2_value);
-            // Serial.print("Motor3_value = ");
-            // Serial.println(Motor3_value);
-            // Serial.println("hello");
-            Drive_Motor(motor1a,motor1b,Motor1_value);
-            Drive_Motor(motor2a,motor2b,Motor2_value);
-            Drive_Motor(motor3a,motor3b,Motor3_value);
-            delay(2);
-          }
+          // Serial.print("Motor1_value = ");
+          // Serial.print(Motor1_value);
+          // Serial.print("  Motor2_value = ");
+          // Serial.print(Motor2_value);
+          // Serial.print("  Motor3_value = ");
+          // Serial.println(Motor3_value);
+          
+          Drive_Motor(motor1a,motor1b,Motor1_value);
+          Drive_Motor(motor2a,motor2b,Motor2_value);
+          Drive_Motor(motor3a,motor3b,Motor3_value);
+          delay(2);
 
 //moveing code above
 
@@ -364,7 +365,6 @@ void loop() {
           //BntY
           mySerial.print(controllerBtnY);
           mySerial.println(")");
-
           }
 
 
