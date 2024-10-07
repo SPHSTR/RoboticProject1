@@ -118,14 +118,14 @@ void loop(){
 
   String str = "";
   String str1 = "";
-  while(Serial.available()){
-    str.concat(char(Serial.read()));
+  while(mySerial.available()){
+    str.concat(char(mySerial.read()));
   }
 
   str.trim();
 
-  while(mySerial.available()){
-    str1.concat(char(mySerial.read()));
+  while(Serial.available()){
+    str1.concat(char(Serial.read()));
     }
   
   str1.trim();
@@ -207,7 +207,7 @@ void loop(){
       /// Jacobian here SOON
 
 
-      Drive_Motor(motor1a,motor1b,PWM1,(-1)*controllerRH*ArmMultiplier);
+      Drive_Motor(motor1a,motor1b,PWM1,(-1)*controllerRH*0.6);
       Drive_Motor(motor2a,motor2b,PWM2,(-1)*controllerRV*ArmMultiplier);
       Drive_Motor(motor3a,motor3b,PWM3,controllerLV*ArmMultiplier);
       delay(2);
