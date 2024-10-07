@@ -184,15 +184,15 @@ void loop() {
         if(xboxController.xboxNotif.btnXbox && (currentMillis - startMillis >= 400)){
         startMillis = currentMillis;
         Controller_Lock =1;
-        Serial.println("Controller Lock");
+        mySerial.println("Controller Lock");
         Vibration(0,0,1,1,100,100);
         }
         
         if(xboxController.xboxNotif.btnLB && (currentMillis - startMillis >= 400)){
         startMillis = currentMillis;
         Controll_Mode_index+=1;
-        Serial.print("Mode ");
-        Serial.println(Controll_Mode[Controll_Mode_index%2]);
+        mySerial.print("Mode ");
+        mySerial.println(Controll_Mode[Controll_Mode_index%2]);
         Vibration(1,0,0,0,70,250);
         }
 
@@ -201,7 +201,7 @@ void loop() {
           if(xboxController.xboxNotif.btnRB && (currentMillis - startMillis >= 400)){
             startMillis = currentMillis;
             Moiving_Mode_index+=1;
-            Serial.print("Moving Mode ");
+            mySerial.print("Moving Mode ");
             Serial.println(Moiving_Mode[Moiving_Mode_index%2]);
             Vibration(0,1,0,0,70,120);
             };
@@ -272,8 +272,8 @@ void loop() {
           if(xboxController.xboxNotif.btnRB && (currentMillis - startMillis >= 400)){
             startMillis = currentMillis;
             Reaching_Mode_index+=1;
-            Serial.print("Reaching Mode ");
-            Serial.println(Reaching_Mode[Reaching_Mode_index%2]);
+            mySerial.print("Reaching Mode ");
+            mySerial.println(Reaching_Mode[Reaching_Mode_index%2]);
             Vibration(0,1,0,0,70,120);
             };
 
@@ -334,37 +334,37 @@ void loop() {
 
           if(Tdelaycurrent - Tdelaystart > 2){
           Tdelaystart = Tdelaycurrent;
-          mySerial.print("(");
+          Serial.print("(");
           //LH
-          mySerial.print(controllerLH);
-          mySerial.print(":");
+          Serial.print(controllerLH);
+          Serial.print(":");
           //LV
-          mySerial.print(controllerLV);
-          mySerial.print(":");
+          Serial.print(controllerLV);
+          Serial.print(":");
           //RH
-          mySerial.print(controllerRH);
-          mySerial.print(":");
+          Serial.print(controllerRH);
+          Serial.print(":");
           //RV
-          mySerial.print(controllerRV);
-          mySerial.print("::");
+          Serial.print(controllerRV);
+          Serial.print("::");
           //TrigL
-          mySerial.print(controllerTrigL);
-          mySerial.print(":");
+          Serial.print(controllerTrigL);
+          Serial.print(":");
           //TrigR
-          mySerial.print(controllerTrigR);
-          mySerial.print("::");
+          Serial.print(controllerTrigR);
+          Serial.print("::");
           //BntA
-          mySerial.print(controllerBtnA);
-          mySerial.print(":");
+          Serial.print(controllerBtnA);
+          Serial.print(":");
           //BntB
-          mySerial.print(controllerBtnB);
-          mySerial.print(":");
+          Serial.print(controllerBtnB);
+          Serial.print(":");
           //BntX
-          mySerial.print(controllerBtnX);
-          mySerial.print(":");
+          Serial.print(controllerBtnX);
+          Serial.print(":");
           //BntY
-          mySerial.print(controllerBtnY);
-          mySerial.println(")");
+          Serial.print(controllerBtnY);
+          Serial.println(")");
           }
 
 
@@ -374,7 +374,7 @@ void loop() {
         if(xboxController.xboxNotif.btnLB && xboxController.xboxNotif.btnRB && (currentMillis - startMillis >= 400)){
           startMillis = currentMillis;
           Controller_Lock = 0;
-          Serial.println("Controller UnLock");
+          mySerial.println("Controller UnLock");
           Vibration(0,0,1,1,100,100);
         }
         digitalWrite(RLED,LOW);
