@@ -17,6 +17,9 @@ unsigned long currentMillis;
 unsigned long servodelaystart;
 unsigned long servodelaycurrent;
 
+unsigned long servo2delaystart;
+unsigned long servo2delaycurrent;
+
 Servo servo1;
 Servo servo2;
 
@@ -59,6 +62,7 @@ void setup(){
 
     startMillis = millis();
     servodelaystart = millis();
+    servo2delaystart = millis();
 
     servo1.attach(15);
     servo2.attach(23);
@@ -87,7 +91,10 @@ void setup(){
     pinMode(Hallsensor3,INPUT_PULLDOWN);
 
     servo1.write(90);
-    servo2.write(180);
+    servo2.write(150);
+
+    Drive_Motor(motor1a,motor1b,PWM1,-128);
+    delay(580);
 }
 
 bool controllers_Lock = 1;
@@ -107,18 +114,20 @@ int controllerBtnY;
 
 int scancount;
 
-
-int servopos = 0;
+int servopos = 90;
+int servopos2 = 150;
 
 int servo2index = 0;
 String servo2state[] = {"Open","Close"};
 double ArmMultiplier;
 double ArmHoriMultiplier;
 int servodelay;
+int servo2delay;
 
 void loop(){
   currentMillis = millis();
   servodelaycurrent = millis();
+  servo2delaycurrent = millis();
 
   String str = "";
   String str1 = "";
@@ -166,6 +175,7 @@ void loop(){
   ArmMultiplier = 0.35;
   ArmHoriMultiplier = 0.75;
   servodelay = 15;
+  servo2delay = 5;
 
   /// Jacobian here SOON
 
@@ -195,22 +205,16 @@ void loop(){
 
 
 
-    //button A  for griper
-    if(controllerBtnA && (currentMillis - startMillis > 400)){
-      startMillis = currentMillis;
-      servo2index += 1;
+    //button A,B  for griper
+    if(servo2delaycurrent - servo2delaystart > servo2delay){
+      servo2delaystart = servo2delaycurrent;
+      if(controllerBtnA && servopos2 < 180){
+        servo2.write(servopos2);
+        servopos2 += 1;
+      }else if(controllerBtnB  && servopos2 > 0){
+        servo2.write(servopos2);
+        servopos2 -= 1;
+      }
     }
-
-    if(servo2index%2 == 0){
-      servo2.write(0);
-    }else if(servo2index%2 == 1){
-      servo2.write(180);
-    }
-
-    // Serial.print("  servopos = ");
-    // Serial.print(servopos);
-
-    // Serial.print(" griper =  ");
-    // Serial.println(servo2state[servo2index%2]);
 
 }
