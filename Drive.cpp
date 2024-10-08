@@ -121,7 +121,6 @@ void Drive_Motor(int motorA,int motorB,int motorvalue){
 }
 
 void Range_Finder(){
-
 }
 
 int start = 0;
@@ -198,6 +197,8 @@ void loop() {
 
         if(Controll_Mode[Controll_Mode_index%2] == "Moving"){
 
+          Serial.println("(0:0:0:0::0:0::0:0:0:0)");
+
           if(xboxController.xboxNotif.btnRB && (currentMillis - startMillis >= 400)){
             startMillis = currentMillis;
             Moiving_Mode_index+=1;
@@ -227,7 +228,6 @@ void loop() {
 
 
           //wait for ultrasonic init
-
 
           controllertheshold = 10;
           rotationmultiply = 2;
@@ -269,25 +269,14 @@ void loop() {
         }else 
         if(Controll_Mode[Controll_Mode_index%2] == "Reaching"){
 
-          if(xboxController.xboxNotif.btnRB && (currentMillis - startMillis >= 400)){
-            startMillis = currentMillis;
-            Reaching_Mode_index+=1;
-            mySerial.print("Reaching Mode ");
-            mySerial.println(Reaching_Mode[Reaching_Mode_index%2]);
-            Vibration(0,1,0,0,70,120);
-            };
+          // Drive_Motor(motor1a,motor1b,0);
+          // Drive_Motor(motor2a,motor2b,0);
+          // Drive_Motor(motor3a,motor3b,0);
 
-          if((Reaching_Mode_index%2)==0){
-              digitalWrite(RLED,LOW);
-              digitalWrite(GLED,LOW);
-              digitalWrite(BLED,LOW);
-              digitalWrite(YLED,HIGH);
-            }else if ((Reaching_Mode_index%2)==1){
-              digitalWrite(RLED,HIGH);
-              digitalWrite(GLED,LOW);
-              digitalWrite(BLED,LOW);
-              digitalWrite(YLED,HIGH);
-            }
+          digitalWrite(RLED,LOW);
+          digitalWrite(GLED,LOW);
+          digitalWrite(BLED,LOW);
+          digitalWrite(YLED,HIGH);
 
 //Arm code
 
@@ -334,6 +323,11 @@ void loop() {
 
           if(Tdelaycurrent - Tdelaystart > 2){
           Tdelaystart = Tdelaycurrent;
+
+          Drive_Motor(motor1a,motor1b,0);
+          Drive_Motor(motor2a,motor2b,0);
+          Drive_Motor(motor3a,motor3b,0);
+
           Serial.print("(");
           //LH
           Serial.print(controllerLH);
@@ -367,7 +361,6 @@ void loop() {
           Serial.println(")");
           }
 
-
 //Arm code abrove
         }
       }else if(Controller_Lock == 1){
@@ -385,7 +378,7 @@ void loop() {
     }
   }else{
 
-    if(currentMillis - startMillis >= 350){
+    if(currentMillis - startMillis >= 250){
       startMillis = currentMillis;
       if(digitalRead(RLED) == LOW){
         digitalWrite(RLED,HIGH);
@@ -400,10 +393,14 @@ void loop() {
       }
     }
     // Serial.println("not connected");
-    if (!xboxController.isConnected() && (ESPcurrentMillis - ESPstartMillis >= 15000)) {//20000
+    if (!xboxController.isConnected() && (ESPcurrentMillis - ESPstartMillis >= 10000)) {//20000
       ESPstartMillis = ESPcurrentMillis;
       ESP.restart();
-
     }
+    
+    Serial.print("(0:0:0:0::0:0::0:0:0:0)");
+    Drive_Motor(motor1a,motor1b,0);
+    Drive_Motor(motor2a,motor2b,0);
+    Drive_Motor(motor3a,motor3b,0);
   }
 }
