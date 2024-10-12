@@ -49,6 +49,20 @@ unsigned long USCurrentMillis;
 unsigned long ConStartMillis;
 unsigned long ConCurrentMillis;
 
+void Drive_Motor(int motorA,int motorB,int motorvalue){
+  if(motorvalue < -255){motorvalue = -255;}
+  if(motorvalue > 255){motorvalue = 255;}
+  if(motorvalue > 0){
+    analogWrite(motorA,abs(motorvalue));
+    analogWrite(motorB,0);
+  }else if(motorvalue < 0){
+    analogWrite(motorA,0);
+    analogWrite(motorB,abs(motorvalue));
+  }else{
+    analogWrite(motorA,128);
+    analogWrite(motorB,128);
+  }
+}
 
 void setup() {
   Serial.begin(115200);
@@ -89,6 +103,17 @@ void setup() {
   // Encoder.digitalWrite(P0,HIGH);
 
   mySerial.begin(115200);
+
+
+  delay(2500);
+  Drive_Motor(motor1a,motor1b,100);
+  Drive_Motor(motor2a,motor2b,100);
+  Drive_Motor(motor3a,motor3b,100);
+  delay(800);
+  Drive_Motor(motor1a,motor1b,0);
+  Drive_Motor(motor2a,motor2b,0);
+  Drive_Motor(motor3a,motor3b,0);
+  delay(2);
 }
 
 void Vibration(bool a,bool b,bool c,bool d,int x,int y){
@@ -105,20 +130,6 @@ void Vibration(bool a,bool b,bool c,bool d,int x,int y){
   xboxController.writeHIDReport(repo);
 }
 
-void Drive_Motor(int motorA,int motorB,int motorvalue){
-  if(motorvalue < -255){motorvalue = -255;}
-  if(motorvalue > 255){motorvalue = 255;}
-  if(motorvalue > 0){
-    analogWrite(motorA,abs(motorvalue));
-    analogWrite(motorB,0);
-  }else if(motorvalue < 0){
-    analogWrite(motorA,0);
-    analogWrite(motorB,abs(motorvalue));
-  }else{
-    analogWrite(motorA,128);
-    analogWrite(motorB,128);
-  }
-}
 
 void Range_Finder(){
 }
@@ -129,7 +140,7 @@ int Controll_Mode_index = 0;
 String Controll_Mode[] = {"Moving","Reaching"};
 int Moiving_Mode_index =0;
 String Moiving_Mode[] = {"Walk","Rush"};
-double movingmodemultiply[] = {0.5, 1.0};
+double movingmodemultiply[] = {0.55, 0.97};
 int Reaching_Mode_index =0;
 String Reaching_Mode[] = {"mode1","mode2"};
 
@@ -177,6 +188,15 @@ void loop() {
       if(start <=0){
         Vibration(1,1,1,1,70,250);
         start+=1;
+
+        Drive_Motor(motor1a,motor1b,-100);
+        Drive_Motor(motor2a,motor2b,-100);
+        Drive_Motor(motor3a,motor3b,-100);
+        delay(800);
+        Drive_Motor(motor1a,motor1b,0);
+        Drive_Motor(motor2a,motor2b,0);
+        Drive_Motor(motor3a,motor3b,0);
+        delay(2);
       };
 
       if(Controller_Lock == 0){
@@ -230,7 +250,7 @@ void loop() {
           //wait for ultrasonic init
 
           controllertheshold = 10;
-          rotationmultiply = 2;
+          rotationmultiply = 1.6;
 //moving code here
           if(abs((-1)*(xboxController.xboxNotif.joyLVert/128)+256) > controllertheshold){
             controllerLV = (-1)*(xboxController.xboxNotif.joyLHori/128)+256 ;
@@ -244,13 +264,31 @@ void loop() {
             controllerRH = ((-1)*(xboxController.xboxNotif.joyRHori/128)+256)*rotationmultiply;
           }else controllerRH = 0;
 
+
+          // if(xboxController.xboxNotif.btnDirUp || xboxController.xboxNotif.btnDirDown){
+          //   if(xboxController.xboxNotif.btnDirUp){
+          //     controllerLV = 200;
+          //   }else if(xboxController.xboxNotif.btnDirDown){
+          //     controllerLV = -200;
+          //   }
+          // }else controllerLV = 0;
+
+
+          // if(xboxController.xboxNotif.btnDirLeft || xboxController.xboxNotif.btnDirRight){
+          //   if(xboxController.xboxNotif.btnDirRight){
+          //     controllerLH = 200;
+          //   }else if(xboxController.xboxNotif.btnDirLeft){
+          //     controllerLH = -200;
+          //   }
+          // }else controllerLH = 0;
+
           //ultrasonic cal here
           //
           //ultrasonic cal above
 
-          Motor1_value = (-controllerLV + (-controllerRH * 0.125 * 3)) * movingmodemultiply[Moiving_Mode_index%2];
-          Motor2_value = ((controllerLV * sin(PI/6)) - (controllerLH * cos(PI/6)) + (-controllerRH * 0.125 * 3)) * movingmodemultiply[Moiving_Mode_index%2];
-          Motor3_value = ((controllerLV * sin(PI/6)) + (controllerLH * cos(PI/6)) + (-controllerRH * 0.125 * 3)) * movingmodemultiply[Moiving_Mode_index%2];
+          Motor1_value = (-controllerLV + (-controllerRH * 0.1 * 3)) * movingmodemultiply[Moiving_Mode_index%2];
+          Motor2_value = ((controllerLV * sin(PI/6)) - (controllerLH * cos(PI/6)) + (-controllerRH * 0.1 * 3)) * movingmodemultiply[Moiving_Mode_index%2];
+          Motor3_value = ((controllerLV * sin(PI/6)) + (controllerLH * cos(PI/6)) + (-controllerRH * 0.1 * 3)) * movingmodemultiply[Moiving_Mode_index%2];
 
           // Serial.print("Motor1_value = ");
           // Serial.print(Motor1_value);
@@ -258,7 +296,7 @@ void loop() {
           // Serial.print(Motor2_value);
           // Serial.print("  Motor3_value = ");
           // Serial.println(Motor3_value);
-          
+
           Drive_Motor(motor1a,motor1b,Motor1_value);
           Drive_Motor(motor2a,motor2b,Motor2_value);
           Drive_Motor(motor3a,motor3b,Motor3_value);
@@ -269,9 +307,9 @@ void loop() {
         }else 
         if(Controll_Mode[Controll_Mode_index%2] == "Reaching"){
 
-          // Drive_Motor(motor1a,motor1b,0);
-          // Drive_Motor(motor2a,motor2b,0);
-          // Drive_Motor(motor3a,motor3b,0);
+          Motor1_value = 0;
+          Motor2_value = 0;
+          Motor3_value = 0;
 
           digitalWrite(RLED,LOW);
           digitalWrite(GLED,LOW);
@@ -321,12 +359,13 @@ void loop() {
           }else controllerBtnY = 0 ;
 
 
-          if(Tdelaycurrent - Tdelaystart > 2){
+          if(Tdelaycurrent - Tdelaystart > 0){
           Tdelaystart = Tdelaycurrent;
 
           Drive_Motor(motor1a,motor1b,0);
           Drive_Motor(motor2a,motor2b,0);
           Drive_Motor(motor3a,motor3b,0);
+          delay(2);
 
           Serial.print("(");
           //LH
@@ -370,25 +409,34 @@ void loop() {
           mySerial.println("Controller UnLock");
           Vibration(0,0,1,1,100,100);
         }
+
         digitalWrite(RLED,LOW);
         digitalWrite(GLED,HIGH);
         digitalWrite(BLED,LOW);
         digitalWrite(YLED,LOW);
+
+        Motor1_value = 0;
+        Motor2_value = 0;
+        Motor3_value = 0;
+
+        Serial.print("(0:0:0:0::0:0::0:0:0:0)");
+        Drive_Motor(motor1a,motor1b,0);
+        Drive_Motor(motor2a,motor2b,0);
+        Drive_Motor(motor3a,motor3b,0);
       }
     }
   }else{
-
     if(currentMillis - startMillis >= 250){
       startMillis = currentMillis;
       if(digitalRead(RLED) == LOW){
         digitalWrite(RLED,HIGH);
-        digitalWrite(BLED,HIGH);
-        digitalWrite(GLED,LOW);
+        digitalWrite(BLED,LOW);
+        digitalWrite(GLED,HIGH);
         digitalWrite(YLED,LOW);
       }else{
         digitalWrite(RLED,LOW);
-        digitalWrite(BLED,LOW);
-        digitalWrite(GLED,HIGH);
+        digitalWrite(BLED,HIGH);
+        digitalWrite(GLED,LOW);
         digitalWrite(YLED,HIGH);
       }
     }
