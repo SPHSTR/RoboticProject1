@@ -90,11 +90,18 @@ void setup(){
     pinMode(Hallsensor2,INPUT_PULLDOWN);
     pinMode(Hallsensor3,INPUT_PULLDOWN);
 
-    servo1.write(90);
-    servo2.write(150);
+    servo1.write(95);
+    // servo2.write(170);
 
-    Drive_Motor(motor1a,motor1b,PWM1,-128);
+    servo2.write(0);
+    delay(150);
+    servo2.write(180);
+    delay(150);
+    servo2.write(90);
+
+    Drive_Motor(motor1a,motor1b,PWM1,-100);
     delay(580);
+    Drive_Motor(motor1a,motor1b,PWM1,0);
 }
 
 bool controllers_Lock = 1;
@@ -114,12 +121,13 @@ int controllerBtnY;
 
 int scancount;
 
-int servopos = 90;
-int servopos2 = 150;
+int servopos = 95;
+// int servopos2 = 170;
 
 int servo2index = 0;
 String servo2state[] = {"Open","Close"};
 double ArmMultiplier;
+double ElbowMultiplier;
 double ArmHoriMultiplier;
 int servodelay;
 int servo2delay;
@@ -172,16 +180,17 @@ void loop(){
 
 
 
-  ArmMultiplier = 0.35;
-  ArmHoriMultiplier = 0.75;
-  servodelay = 15;
-  servo2delay = 5;
+  ArmHoriMultiplier = 0.35;
+  ArmMultiplier = 0.45;
+  ElbowMultiplier = 0.35;
+  servodelay = 20;
+  // servo2delay = 10;
 
   /// Jacobian here SOON
 
     Drive_Motor(motor1a,motor1b,PWM1,controllerRH*ArmHoriMultiplier);
     Drive_Motor(motor2a,motor2b,PWM2,(-1)*controllerRV*ArmMultiplier);
-    Drive_Motor(motor3a,motor3b,PWM3,(-1)*controllerLV*ArmMultiplier);
+    Drive_Motor(motor3a,motor3b,PWM3,(-1)*controllerLV*ElbowMultiplier);
     delay(2);
 
     // Serial.print("motor 1 = ");
@@ -203,18 +212,23 @@ void loop(){
       }
     }
 
-
-
     //button A,B  for griper
-    if(servo2delaycurrent - servo2delaystart > servo2delay){
-      servo2delaystart = servo2delaycurrent;
-      if(controllerBtnA && servopos2 < 180){
-        servo2.write(servopos2);
-        servopos2 += 1;
-      }else if(controllerBtnB  && servopos2 > 0){
-        servo2.write(servopos2);
-        servopos2 -= 1;
-      }
-    }
+    // if(servo2delaycurrent - servo2delaystart > servo2delay){
+    //   servo2delaystart = servo2delaycurrent;
+    //   if(controllerBtnA && servopos2 < 180){
+    //     servo2.write(servopos2);
+    //     servopos2 += 1;
+    //   }else if(controllerBtnB  && servopos2 > 100){
+    //     servo2.write(servopos2);
+    //     servopos2 -= 1;
+    //   }
+    // }
 
+    if(controllerBtnA || controllerBtnB){
+      if(controllerBtnA){
+        servo2.write(75);
+      }else if(controllerBtnB){
+        servo2.write(105);
+      }
+    }else servo2.write(90);
 }
